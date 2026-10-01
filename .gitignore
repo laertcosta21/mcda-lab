@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+# banco local: contém contas e hashes de senha, não versionar
+mcda_lab.db
+.streamlit/secrets.toml
