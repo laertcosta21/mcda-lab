@@ -1,6 +1,7 @@
 """Sidebar: marca, contexto e navegação entre as seções do workspace."""
 import streamlit as st
 
+from ui import dialogs, session
 from ui.components import esc, icon
 
 # (seção, número, ícone Material Symbols)
@@ -19,6 +20,15 @@ def _brand():
             '<div><div class="mcda-brand-name">MCDA Lab</div><div class="mcda-brand-sub">Laboratório acadêmico</div></div></div>')
 
 
+def _account(user):
+    """Conta e saída, iguais no painel e dentro de um exercício."""
+    with st.container(key='nav_foot'):
+        if st.button('Minha conta', width='stretch', icon=':material/person:'):
+            dialogs.account(user)
+        if st.button('Sair', width='stretch', icon=':material/logout:'):
+            session.end(); st.rerun()
+
+
 def sidebar_dashboard(user):
     with st.sidebar:
         _brand()
@@ -29,12 +39,10 @@ def sidebar_dashboard(user):
             f'<div class="mcda-side-meta">{esc(user.get("email") or "")}</div></div>'
         )
         st.divider()
-        with st.container(key='nav_foot'):
-            if st.button('Sair', width='stretch', icon=':material/logout:'):
-                st.session_state.clear(); st.rerun()
+        _account(user)
 
 
-def sidebar_lab(exercise, owner):
+def sidebar_lab(exercise, owner, user):
     with st.sidebar:
         _brand()
         st.divider()
@@ -53,6 +61,7 @@ def sidebar_lab(exercise, owner):
                              type='primary' if current == name else 'secondary'):
                     st.session_state.section = name; st.rerun()
         st.divider()
-        with st.container(key='nav_foot'):
+        with st.container(key='nav_back'):
             if st.button('Meus exercícios', width='stretch', icon=':material/arrow_back:'):
                 st.session_state.pop('eid', None); st.rerun()
+        _account(user)

@@ -17,6 +17,7 @@ python -m pytest -q
 
 - `tests/test_engines.py`: casos dourados dos motores. Não ajustar os valores esperados.
 - `tests/test_core.py`: garante que a camada de explicação reproduz os totais dos motores.
+- `tests/test_storage.py`: sessão persistente e operações de edição e remoção, em banco temporário.
 
 ## Estrutura
 
@@ -32,6 +33,8 @@ python -m pytest -q
 | Shell | `ui/layout.py`, `ui/navigation.py` | Configuração da página, barra de contexto e sidebar. |
 | Gráficos | `ui/charts.py` | ECharts no padrão do design system. |
 | Telas | `ui/views/` | Login, Meus exercícios e as seis seções do workspace. |
+| Sessão | `ui/session.py` | Mantém o login após recarregar a página (cookie + tabela `sessions`) e a tela atual na URL. |
+| Diálogos | `ui/dialogs.py` | Criar, editar e excluir exercícios; sair de exercício; perfil, senha e exclusão de conta. |
 
 As cores de base também ficam em `.streamlit/config.toml`, de onde o Streamlit tira o tema dos widgets nativos. Ao mudar a paleta, altere os dois arquivos.
 

@@ -3,7 +3,7 @@ import streamlit as st
 
 from core.rules import FUNCTION_PARAMS, FUNCTIONS, PARAM_DEFAULTS, rebuild_matrix
 from engine import storage
-from ui.components import cell, data_table, esc, metric_strip, page_header, section
+from ui.components import cell, data_table, esc, metric_strip, page_header, panel, section
 from ui.layout import flash
 
 _PARAM_HELP = {'q': 'q: limiar de indiferença', 'p': 'p: limiar de preferência estrita', 's': 's: ponto de inflexão da curva gaussiana'}
@@ -55,20 +55,20 @@ def _params_editor(crit):
     """Uma linha por critério cuja função exige parâmetros; só os campos necessários aparecem."""
     need = [(i, c) for i, c in enumerate(crit) if FUNCTION_PARAMS.get(c['function'])]
     if not need: return
-    section('Parâmetros das funções de preferência', 'Aparecem apenas os parâmetros exigidos pela função escolhida.')
-    head = st.columns(_PARAM_GRID, vertical_alignment='center')
-    for col, label in zip(head, ['Critério', 'Função', 'q', 'p', 's']):
-        col.html(f'<div class="mcda-param-head">{label}</div>')
-    for i, c in need:
-        row = st.columns(_PARAM_GRID, vertical_alignment='center')
-        row[0].html(f'<div class="mcda-param-cell">{esc(c["name"])}</div>')
-        row[1].html(f'<div class="mcda-param-cell">{esc(c["function"])}</div>')
-        for k, param in enumerate(('q', 'p', 's')):
-            if param in FUNCTION_PARAMS[c['function']]:
-                c[param] = row[2 + k].number_input(f'{param} de {c["name"]}', value=float(c[param]), min_value=0., step=.1, format='%.4f',
-                                                   key=f'prm_{i}_{c["name"]}_{param}', label_visibility='collapsed', help=_PARAM_HELP[param])
-            else:
-                row[2 + k].html('<div class="mcda-param-cell dim">—</div>')
+    with panel('params', 'Parâmetros das funções de preferência', 'Aparecem apenas os parâmetros exigidos pela função escolhida.'):
+        head = st.columns(_PARAM_GRID, vertical_alignment='center')
+        for col, label in zip(head, ['Critério', 'Função', 'q', 'p', 's']):
+            col.html(f'<div class="mcda-param-head">{label}</div>')
+        for i, c in need:
+            row = st.columns(_PARAM_GRID, vertical_alignment='center')
+            row[0].html(f'<div class="mcda-param-cell">{esc(c["name"])}</div>')
+            row[1].html(f'<div class="mcda-param-cell">{esc(c["function"])}</div>')
+            for k, param in enumerate(('q', 'p', 's')):
+                if param in FUNCTION_PARAMS[c['function']]:
+                    c[param] = row[2 + k].number_input(f'{param} de {c["name"]}', value=float(c[param]), min_value=0., step=.1, format='%.4f',
+                                                       key=f'prm_{i}_{c["name"]}_{param}', label_visibility='collapsed', help=_PARAM_HELP[param])
+                else:
+                    row[2 + k].html('<div class="mcda-param-cell dim">—</div>')
 
 
 def render(e, data, owner, u):
@@ -77,7 +77,8 @@ def render(e, data, owner, u):
                 'Organize a estrutura do modelo em uma visão compacta: o que se avalia, com que importância e como cada alternativa se sai.')
     if not owner: st.info('Modo participante: os dados são definidos pelo proprietário do exercício.', icon=':material/visibility:')
 
-    section('Critérios', 'Objetivo, peso' + (' e função de preferência de cada critério.' if promethee else ' de cada critério.'))
+    section('Critérios', 'Objetivo, peso' + (' e função de preferência de cada critério.' if promethee else ' de cada critério.')
+            + (' Inclua na última linha; para excluir, selecione a linha e use a lixeira.' if owner else ''))
     if owner:
         crit = _criteria_editor(data, promethee)
         if promethee: _params_editor(crit)
@@ -100,7 +101,7 @@ def render(e, data, owner, u):
         n_max = sum(c['direction'] == 'MAX' for c in crit)
         metric_strip([
             ('Critérios', len(crit), 'estrutura de avaliação'),
-            ('Soma dos pesos', f'{sw:.4f}', 'normalizada para 1 no cálculo', {'mono': True}),
+            ('Soma dos pesos', f'{sw:.4f}', 'normalizada no cálculo', {'mono': True}),
             ('Objetivos', f'{n_max} ↑  {len(crit) - n_max} ↓', 'a maximizar e a minimizar'),
         ])
 

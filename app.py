@@ -6,6 +6,7 @@ import streamlit as st
 from core.rules import validate
 from engine import storage
 from ui.components import callout, esc, footer, page_header
+from ui import session
 from ui.layout import context_bar, flash, setup_page
 from ui.navigation import sidebar_lab
 from ui.views import about, analysis, auth, dashboard, method, problem, sensitivity
@@ -13,6 +14,7 @@ from ui.views import data as data_view
 
 storage.init()
 setup_page()
+session.restore()
 
 CALC_PAGES = {
     'PROMETHEE II': {'Método': method.promethee, 'Análise': analysis.promethee, 'Sensibilidade': sensitivity.promethee},
@@ -24,7 +26,7 @@ def lab():
     u = st.session_state.user; e = storage.get(st.session_state.eid, u['id'])
     if not e: st.session_state.pop('eid', None); st.rerun()
     data = json.loads(e['data']); owner = e['owner_id'] == u['id']
-    sidebar_lab(e, owner)
+    sidebar_lab(e, owner, u)
     flash()
     context_bar(e, owner)
     name = st.session_state.get('section', 'Problema')
@@ -45,6 +47,8 @@ def lab():
     footer()
 
 
-if auth.render():
+logged = auth.render()
+session.sync()
+if logged:
     if st.session_state.get('eid'): lab()
     else: dashboard.render()

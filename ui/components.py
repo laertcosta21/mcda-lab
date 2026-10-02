@@ -53,8 +53,11 @@ def section(label, hint='', step=None):
 
 
 def panel(key, title='', hint=''):
-    """Card padrão para gráficos e grupos. Use com `with`."""
-    box = st.container(border=True, key=f'panel_{key}')
+    """Card padrão para gráficos, tabelas e grupos. Use com `with`.
+
+    Ocupa toda a altura da linha, então dois cards lado a lado começam e terminam juntos.
+    """
+    box = st.container(border=True, key=f'panel_{key}', height='stretch')
     if title:
         box.html(
             f'<div class="mcda-panel-title">{esc(title)}</div>'
@@ -77,7 +80,7 @@ def metric_strip(items):
         cells.append(
             f'<div class="mcda-metric {opt.get("tone", "")}{" accent" if opt.get("accent") else ""}">'
             f'<div class="mcda-metric-label">{esc(label)}</div>'
-            f'<div class="mcda-metric-value{size}">{esc(value)}</div>'
+            f'<div class="mcda-metric-value{size}" title="{esc(value)}">{esc(value)}</div>'
             + (f'<div class="mcda-metric-note">{esc(note)}</div>' if note else '')
             + '</div>'
         )
@@ -120,12 +123,13 @@ def _td(c, tag='td'):
     return f'<{tag}>{esc(c)}</{tag}>'
 
 
-def data_table(columns, rows, total=None, lead_rows=(), note=''):
+def data_table(columns, rows, total=None, lead_rows=(), note='', compact=False):
     """Tabela densa somente leitura.
 
     columns: lista de (rótulo, classe) — classe 'r' alinha números à direita.
     rows: lista de linhas; a primeira célula vira cabeçalho de linha.
     total: linha de totalização opcional. lead_rows: índices a destacar.
+    compact: células mais estreitas, para tabelas com muitas colunas.
     """
     head = ''.join(f'<th class="{cls}" scope="col">{esc(label)}</th>' for label, cls in columns)
     body = []
@@ -135,7 +139,7 @@ def data_table(columns, rows, total=None, lead_rows=(), note=''):
     if total:
         body.append(f'<tr class="total">{_td(total[0], "th")}{"".join(_td(c) for c in total[1:])}</tr>')
     st.html(
-        f'<div class="mcda-table-wrap"><table class="mcda-table"><thead><tr>{head}</tr></thead>'
+        f'<div class="mcda-table-wrap"><table class="mcda-table{" compact" if compact else ""}"><thead><tr>{head}</tr></thead>'
         f'<tbody>{"".join(body)}</tbody></table></div>'
         + (f'<div class="mcda-table-note">{esc(note)}</div>' if note else '')
     )
@@ -185,14 +189,17 @@ def rank_list(rows):
 
 
 def footer():
-    st.html(
-        '<footer class="mcda-footer"><div class="mcda-footer-grid">'
-        '<div><div class="mcda-footer-brand">MCDA Lab</div>'
-        '<div class="mcda-footer-desc">Laboratório didático de Apoio Multicritério à Decisão</div></div>'
-        '<div><div class="mcda-footer-head">Métodos</div><ul><li>PROMETHEE II</li><li>ELECTRE I</li></ul></div>'
-        '<div><div class="mcda-footer-head">Autoria</div><ul><li>Laert Costa</li><li>Felipe Pires</li><li>UFMS, 2026</li></ul></div>'
-        '</div><div class="mcda-footer-note">'
-        '<span>Ferramenta didática. Os resultados dependem dos dados, pesos, parâmetros e limiares definidos pelo usuário. '
-        'O sistema apoia a análise e não substitui o julgamento do decisor.</span>'
-        + badge('Uso acadêmico') + '</div></footer>'
-    )
+    """Rodapé da página. O container com key='footer' é empurrado para o fim da tela pelo CSS."""
+    with st.container(key='footer'):
+        st.html(
+            '<footer class="mcda-footer"><div class="mcda-footer-grid">'
+            f'<div><div class="mcda-footer-brand"><span class="mcda-brand-mark">{icon("query_stats")}</span>MCDA Lab</div>'
+            '<div class="mcda-footer-desc">Laboratório didático de Apoio Multicritério à Decisão.</div></div>'
+            '<div><div class="mcda-footer-head">Métodos</div><ul><li>PROMETHEE II</li><li>ELECTRE I</li></ul></div>'
+            '<div><div class="mcda-footer-head">Autoria</div><ul><li>Laert Costa</li><li>Felipe Pires</li></ul></div>'
+            '<div><div class="mcda-footer-head">Instituição</div><ul><li>UFMS</li><li>2026</li></ul></div>'
+            '</div><div class="mcda-footer-note">'
+            '<span>Ferramenta didática de uso acadêmico. Os resultados dependem dos dados, pesos, parâmetros e limiares definidos pelo '
+            'usuário. O sistema apoia a análise e não substitui o julgamento do decisor.</span>'
+            '</div></footer>'
+        )

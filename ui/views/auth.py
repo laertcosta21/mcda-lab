@@ -1,6 +1,7 @@
 import streamlit as st
 
 from engine import storage
+from ui import session
 from ui.components import footer, icon, steps
 
 FLOW = ['Problema', 'Critérios', 'Preferências', 'Comparações', 'Fluxos / sobreclassificação', 'Análise']
@@ -32,7 +33,7 @@ def render():
                         if st.form_submit_button('Entrar', type='primary', width='stretch'):
                             u = storage.login(e, p)
                             if u:
-                                st.session_state.user = dict(u); st.session_state.section = 'Problema'; st.rerun()
+                                session.start(u); st.session_state.section = 'Problema'; st.rerun()
                             else: st.error('E-mail ou senha inválidos.')
                 with tabs[1]:
                     with st.form('reg', border=False):
@@ -45,5 +46,5 @@ def render():
                             else: st.error(msg)
                 st.html('<div class="mcda-login-note">Ao acessar, você reconhece o caráter didático do laboratório. '
                         'Os resultados apoiam a análise e não substituem o julgamento do decisor.</div>')
-        footer()
+    footer()
     return False
