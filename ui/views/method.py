@@ -31,13 +31,13 @@ def promethee(data):
     section('Formulação', step='1')
     formula(['S(a,b) = Σⱼ wⱼ · Fⱼ(a,b)', 'φ⁺(a) = Σ S(a,b) / (n−1)', 'φ⁻(a) = Σ S(b,a) / (n−1)', 'φ(a) = φ⁺(a) − φ⁻(a)'])
 
-    section('Comparação par a par', 'escolha o par a → b', step='2')
+    section('Comparação par a par', 'Escolha o par a comparar, de a para b.', step='2')
     a, b = _pair(A, 'p')
     if a == b:
         st.warning('Escolha duas alternativas diferentes para visualizar a comparação.'); return
     na, nb = A[a], A[b]; w = r['weights']; F = r['preferences'][a, b]
 
-    section('Preferência por critério e contribuição ponderada', f'{na} em relação a {nb}', step='3')
+    section('Preferência por critério e contribuição ponderada', f'{na} em relação a {nb}.', step='3')
     rows = []
     for j, c in enumerate(C):
         contrib = w[j] * F[j]
@@ -51,7 +51,7 @@ def promethee(data):
         note='Leia da esquerda para a direita: desempenho → preferência Fⱼ → peso normalizado wⱼ → contribuição wⱼ × Fⱼ.',
     )
 
-    section('Preferência agregada', 'substituição numérica', step='4')
+    section('Preferência agregada', 'Substituição numérica na fórmula.', step='4')
     terms = ' + '.join(f'{w[j]:.4f}×{F[j]:.4g}' for j in range(len(C)))
     formula([
         f'S({esc(na)}, {esc(nb)}) = Σⱼ wⱼ · Fⱼ',
@@ -87,14 +87,14 @@ def electre(data):
              'D(a,b) = max(desvantagem de a / amplitude do critério)',
              'aSb ⇔ C(a,b) ≥ c′  E  D(a,b) ≤ d′'])
 
-    section('Comparação par a par', 'escolha o par a → b', step='2')
+    section('Comparação par a par', 'Escolha o par a comparar, de a para b.', step='2')
     a, b = _pair(A, 'e')
     if a == b:
         st.warning('Escolha duas alternativas diferentes.'); return
     na, nb = A[a], A[b]; w = r['weights']; pair = electre_pair(X, C, a, b)
     cc = float(r['C'][a, b]); dd = float(r['D'][a, b]); okc = cc >= ct - EPS; okd = dd <= dt + EPS; rel = bool(r['R'][a, b])
 
-    section('Concordância e discordância por critério', f'{na} em relação a {nb}', step='3')
+    section('Concordância e discordância por critério', f'{na} em relação a {nb}.', step='3')
     rows = []
     for j, c in enumerate(C):
         agrees = bool(pair['agrees'][j]); disc = float(pair['discordance'][j])
@@ -117,9 +117,9 @@ def electre(data):
 
     section('Teste dos limiares e relação', step='4')
     metric_strip([
-        ('Concordância C(a,b)', f'{cc:.4f}', f"{'≥' if okc else '<'} c′ = {ct:.2f} · {'atende' if okc else 'não atende'}",
+        ('Concordância C(a,b)', f'{cc:.4f}', f"{'≥' if okc else '<'} c′ = {ct:.2f}, {'atende' if okc else 'não atende'}",
          {'mono': True, 'plain': True, 'tone': 'success' if okc else 'neutral'}),
-        ('Discordância D(a,b)', f'{dd:.4f}', f"{'≤' if okd else '>'} d′ = {dt:.2f} · {'atende' if okd else 'não atende'}",
+        ('Discordância D(a,b)', f'{dd:.4f}', f"{'≤' if okd else '>'} d′ = {dt:.2f}, {'atende' if okd else 'não atende'}",
          {'mono': True, 'plain': True, 'tone': 'success' if okd else 'neutral'}),
         ('Relação aSb', 'Sim' if rel else 'Não', f'{na} → {nb}', {'plain': True, 'tone': 'success' if rel else 'neutral'}),
     ])

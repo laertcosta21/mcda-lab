@@ -4,7 +4,7 @@ import streamlit as st
 
 from core.rules import METHODS, default_data, role_label
 from engine import storage
-from ui.components import esc, footer, metric_strip, method_tone, page_header, section
+from ui.components import badge, esc, footer, metric_strip, method_tone, page_header, section
 from ui.layout import flash
 from ui.navigation import sidebar_dashboard
 
@@ -56,11 +56,11 @@ def _card(exercise, user):
             f'<div class="mcda-ex-stat"><b>{n_alt}</b><span>{"alternativa" if n_alt == 1 else "alternativas"}</span></div>'
             f'<div class="mcda-ex-stat"><b>{n_crit}</b><span>{"critério" if n_crit == 1 else "critérios"}</span></div>'
             '</div>'
-            f'<div class="mcda-ex-meta"><span class="mono">{esc(exercise["code"])}</span>'
+            f'<div class="mcda-ex-meta">{badge(exercise["code"], "code")}'
             + (f'<span>Criado em {esc(created)}</span>' if created else '')
             + '</div></div>'
         )
-        if st.button('Abrir exercício', key=f"o{exercise['id']}", width='stretch', icon=':material/arrow_forward:'):
+        if st.button('Abrir exercício', key=f"o{exercise['id']}", width='stretch'):
             st.session_state.eid = exercise['id']; st.session_state.section = 'Problema'; st.rerun()
 
 
@@ -86,7 +86,7 @@ def render():
             ('PROMETHEE II', sum(e['method'] == 'PROMETHEE II' for e in exs), ''),
             ('ELECTRE I', sum(e['method'] == 'ELECTRE I' for e in exs), ''),
         ])
-    section('Exercícios', 'mais recentes primeiro' if exs else '')
+    section('Exercícios', 'Mais recentes primeiro.' if exs else '')
     if not exs:
         st.html('<div class="mcda-empty">Nenhum exercício ainda. Use <strong>Novo exercício</strong> para montar o primeiro problema '
                 'ou <strong>Entrar com código</strong> para participar de um exercício existente.</div>')

@@ -40,18 +40,18 @@ def promethee(data):
     series = [(A[a], sd[sd['alternative'] == a].sort_values('weight')['phi'].tolist()) for a in range(len(A))]
     left, right = st.columns([8, 4], gap='small')
     with left:
-        with panel('sens', f'Fluxo líquido φ conforme o peso de {name}', 'linha tracejada: peso original · linhas pontilhadas: trocas de posição'):
+        with panel('sens', f'Fluxo líquido φ conforme o peso de {name}', 'Linha tracejada: peso original. Linhas pontilhadas: trocas de posição.'):
             charts.sensitivity_lines(sorted(sd['weight'].unique()), series, original, [c['weight'] for c in changes], f'peso de {name}', key='chart_sens')
     with right:
-        with panel('changes', 'Mudanças no ranking', 'onde duas alternativas trocam de posição'):
+        with panel('changes', 'Mudanças no ranking', 'Pesos em que duas alternativas trocam de posição.'):
             if changes:
-                items = ''.join(f'<li><span class="num">≈ {c["weight"]:.3f}</span> · <strong>{esc(c["up"])}</strong> ultrapassa {esc(c["down"])}</li>'
+                items = ''.join(f'<li>Perto de <span class="num">{c["weight"]:.3f}</span>, <strong>{esc(c["up"])}</strong> ultrapassa {esc(c["down"])}</li>'
                                 for c in changes)
                 st.html(f'<ul class="mcda-list">{items}</ul>')
             else:
                 st.html('<div class="mcda-empty">Nenhuma troca de posição entre os pesos testados. As linhas do gráfico não se cruzam neste intervalo.</div>')
 
-    section('Posição por peso testado', f'colunas: peso de {name} · células: posição no ranking')
+    section('Posição por peso testado', f'Cada coluna é um peso de {name}; cada célula, a posição no ranking.')
     rank = sd.pivot(index='weight', columns='alternative', values='rank')
     closest = min(rank.index, key=lambda w: abs(w - original)) if lo <= original <= hi else None
     rows = [[A[a]] + [cell(int(rank.loc[w, a]), 'r num' + (' hit' if rank.loc[w, a] == 1 else '') + (' col-lead' if w == closest else ''))
@@ -100,12 +100,12 @@ def electre(data):
 
     left, right = st.columns([7, 5], gap='small')
     with left:
-        with panel('heat', 'Relações aSb por combinação de limiares', 'célula contornada: limiares atuais'):
+        with panel('heat', 'Relações aSb por combinação de limiares', 'A célula contornada corresponde aos limiares atuais.'):
             charts.threshold_heatmap(cv, dv, grid, (ci, di), key='chart_heat')
     with right:
         section('Combinações testadas')
         rows = [[cell(f'{row["c"]:.2f}', 'num'), cell(f'{row["d"]:.2f}', 'num'), cell(int(row['arcs']), 'r num'), k] for (_, row), k in zip(sd.iterrows(), kernels)]
-        with st.container(height=372, border=False):
+        with st.container(height=372, border=False, key='combos'):
             data_table([('c′', ''), ('d′', ''), ('Relações', 'r'), ('Kernel', '')], rows, lead_rows=[ci * len(dv) + di])
 
     section('Interpretação')

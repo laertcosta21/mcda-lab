@@ -1,20 +1,21 @@
 [theme]
 base = "light"
-primaryColor = "#1B5A72"
-backgroundColor = "#F4F6F6"
-secondaryBackgroundColor = "#FFFFFF"
-textColor = "#18242A"
-linkColor = "#1B5A72"
-borderColor = "#D3DCDF"
+primaryColor = "#0068C9"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F8FAFC"
+textColor = "#31333F"
+linkColor = "#0068C9"
+borderColor = "#D5D9E0"
 showWidgetBorder = true
-baseRadius = "6px"
+baseRadius = "8px"
 baseFontSize = 15
-font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap, sans-serif"
-codeFont = "'JetBrains Mono':https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap, monospace"
+font = "'Work Sans':https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap, sans-serif"
 
 [theme.sidebar]
-backgroundColor = "#FAFBFB"
-secondaryBackgroundColor = "#FFFFFF"
+backgroundColor = "#1E293B"
+secondaryBackgroundColor = "#334155"
+textColor = "#F1F5F9"
+borderColor = "#475569"
 
 [client]
 toolbarMode = "minimal"

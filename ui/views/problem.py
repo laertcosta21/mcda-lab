@@ -15,7 +15,7 @@ def render(e, data, owner, u):
         ('Método', e['method'], 'definido na criação'),
         ('Alternativas', n_alt, 'mínimo para calcular: 2'),
         ('Critérios', len(data['criteria']), 'definidos em 02 Dados'),
-        ('Código', e['code'], 'compartilhe com participantes', {'mono': True}),
+        ('Código', e['code'], 'compartilhe com participantes', {'code': True}),
     ])
     if not owner:
         st.info('Modo participante: somente o proprietário pode editar o problema.', icon=':material/visibility:')
@@ -24,8 +24,8 @@ def render(e, data, owner, u):
             section('Contexto')
             st.html(f'<div class="mcda-prose">{esc(e["description"] or "Sem descrição.")}</div>')
         with right:
-            section('Alternativas', f'{n_alt} cadastradas')
-            if n_alt: data_table([('#', ''), ('Alternativa', '')], [[cell(f'{i:02d}', 'num dim'), a] for i, a in enumerate(data['alternatives'], 1)])
+            section('Alternativas', f'{n_alt} cadastradas.')
+            if n_alt: data_table([('#', ''), ('Alternativa', '')], [[cell(i, 'num dim'), a] for i, a in enumerate(data['alternatives'], 1)])
             else: st.html('<div class="mcda-empty">Nenhuma alternativa cadastrada.</div>')
         return
 
@@ -36,7 +36,7 @@ def render(e, data, owner, u):
         desc = st.text_area('Descrição do problema', value=e['description'] or '', height=168,
                             placeholder='Descreva o objetivo da decisão e seu contexto.')
     with right:
-        section('Alternativas', 'uma por linha')
+        section('Alternativas', 'Uma por linha.')
         adf = st.data_editor(pd.DataFrame({'Alternativa': data['alternatives']}), num_rows='dynamic', width='stretch', hide_index=True,
                              key='alts_v3', column_config={'Alternativa': st.column_config.TextColumn('Alternativa', required=True)})
     alts = [str(x).strip() for x in adf['Alternativa'].tolist() if str(x).strip() and str(x) != 'nan']

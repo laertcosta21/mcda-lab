@@ -17,7 +17,7 @@ def context_bar(exercise, owner):
         f'<span class="mcda-context-name">{esc(exercise["name"])}</span>'
         '<span class="mcda-badges">'
         + badge(exercise['method'], method_tone(exercise['method']))
-        + badge(exercise['code'], 'mono')
+        + badge(exercise['code'], 'code')
         + badge('Proprietário' if owner else 'Participante')
         + '</span></div>'
     )

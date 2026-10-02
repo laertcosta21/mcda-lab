@@ -1,7 +1,7 @@
 """Sidebar: marca, contexto e navegação entre as seções do workspace."""
 import streamlit as st
 
-from ui.components import esc
+from ui.components import esc, icon
 
 # (seção, número, ícone Material Symbols)
 NAV_ITEMS = [
@@ -15,7 +15,8 @@ NAV_ITEMS = [
 
 
 def _brand():
-    st.html('<div class="mcda-brand"><div class="mcda-brand-kicker">Laboratório acadêmico</div><div class="mcda-brand-name">MCDA Lab</div></div>')
+    st.html(f'<div class="mcda-brand"><span class="mcda-brand-mark">{icon("query_stats")}</span>'
+            '<div><div class="mcda-brand-name">MCDA Lab</div><div class="mcda-brand-sub">Laboratório acadêmico</div></div></div>')
 
 
 def sidebar_dashboard(user):
@@ -40,15 +41,15 @@ def sidebar_lab(exercise, owner):
         st.html(
             '<div class="mcda-side-block"><div class="mcda-side-label">Exercício</div>'
             f'<div class="mcda-side-title">{esc(exercise["name"])}</div>'
-            f'<div class="mcda-side-meta">{esc(exercise["method"])}<br><span class="mono">{esc(exercise["code"])}</span>'
-            f' · {"Proprietário" if owner else "Participante"}</div></div>'
+            f'<div class="mcda-side-meta">{esc(exercise["method"])}<br><span class="code">{esc(exercise["code"])}</span>'
+            f', {"proprietário" if owner else "participante"}</div></div>'
         )
         st.divider()
         current = st.session_state.get('section', 'Problema')
         with st.container(key='nav'):
-            for name, number, icon in NAV_ITEMS:
+            for name, number, symbol in NAV_ITEMS:
                 # o número vai em `code` para ganhar coluna própria de largura fixa via CSS
-                if st.button(f'`{number}` {name}', key='nav_' + name, width='stretch', icon=f':material/{icon}:',
+                if st.button(f'`{number}` {name}', key='nav_' + name, width='stretch', icon=f':material/{symbol}:',
                              type='primary' if current == name else 'secondary'):
                     st.session_state.section = name; st.rerun()
         st.divider()

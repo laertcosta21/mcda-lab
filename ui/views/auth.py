@@ -1,7 +1,7 @@
 import streamlit as st
 
 from engine import storage
-from ui.components import footer, steps
+from ui.components import footer, icon, steps
 
 FLOW = ['Problema', 'Critérios', 'Preferências', 'Comparações', 'Fluxos / sobreclassificação', 'Análise']
 
@@ -13,15 +13,17 @@ def render():
         left, right = st.columns([1.15, .85], gap='large', vertical_alignment='center')
         with left:
             st.html(
-                '<div class="mcda-hero"><div class="mcda-eyebrow">Laboratório acadêmico · UFMS</div>'
+                '<div class="mcda-hero"><div class="mcda-hero-kicker">Laboratório acadêmico da UFMS</div>'
                 '<h1>Decisão multicritério, explicada passo a passo.</h1>'
                 '<div class="mcda-lead">Construa problemas, compare alternativas e compreenda visualmente PROMETHEE II e ELECTRE I, '
                 'do dado bruto à análise de sensibilidade.</div>'
-                + steps(FLOW) + '</div>'
+                '<div class="mcda-hero-flow"><div class="mcda-hero-flow-title">O caminho de uma análise</div>'
+                + steps(FLOW) + '</div></div>'
             )
         with right:
             with st.container(border=True, key='login_card'):
-                st.html('<div class="mcda-brand-kicker">Acesso</div><div class="mcda-brand-name">MCDA Lab</div>')
+                st.html(f'<div class="mcda-login-brand"><span class="mcda-brand-mark">{icon("query_stats")}</span>'
+                        '<div><div class="mcda-brand-name">MCDA Lab</div><div class="mcda-brand-sub">Acesse seus exercícios</div></div></div>')
                 tabs = st.tabs(['Entrar', 'Criar conta'])
                 with tabs[0]:
                     with st.form('login', border=False):

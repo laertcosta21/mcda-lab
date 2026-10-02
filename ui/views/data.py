@@ -16,7 +16,7 @@ def _objective(direction):
 
 def _params_text(c):
     used = FUNCTION_PARAMS.get(c.get('function', 'Usual'), ())
-    return ' · '.join(f'{k} = {float(c.get(k, PARAM_DEFAULTS[k])):g}' for k in used) or '—'
+    return ', '.join(f'{k} = {float(c.get(k, PARAM_DEFAULTS[k])):g}' for k in used) or '—'
 
 
 def _criteria_editor(data, promethee):
@@ -55,7 +55,7 @@ def _params_editor(crit):
     """Uma linha por critério cuja função exige parâmetros; só os campos necessários aparecem."""
     need = [(i, c) for i, c in enumerate(crit) if FUNCTION_PARAMS.get(c['function'])]
     if not need: return
-    section('Parâmetros das funções de preferência', 'apenas os exigidos pela função escolhida')
+    section('Parâmetros das funções de preferência', 'Aparecem apenas os parâmetros exigidos pela função escolhida.')
     head = st.columns(_PARAM_GRID, vertical_alignment='center')
     for col, label in zip(head, ['Critério', 'Função', 'q', 'p', 's']):
         col.html(f'<div class="mcda-param-head">{label}</div>')
@@ -77,7 +77,7 @@ def render(e, data, owner, u):
                 'Organize a estrutura do modelo em uma visão compacta: o que se avalia, com que importância e como cada alternativa se sai.')
     if not owner: st.info('Modo participante: os dados são definidos pelo proprietário do exercício.', icon=':material/visibility:')
 
-    section('Critérios', 'objetivo, peso' + (' e função de preferência' if promethee else ''))
+    section('Critérios', 'Objetivo, peso' + (' e função de preferência de cada critério.' if promethee else ' de cada critério.'))
     if owner:
         crit = _criteria_editor(data, promethee)
         if promethee: _params_editor(crit)
@@ -101,10 +101,10 @@ def render(e, data, owner, u):
         metric_strip([
             ('Critérios', len(crit), 'estrutura de avaliação'),
             ('Soma dos pesos', f'{sw:.4f}', 'normalizada para 1 no cálculo', {'mono': True}),
-            ('Objetivos', f'{n_max} ↑ · {len(crit) - n_max} ↓', 'maximizar · minimizar'),
+            ('Objetivos', f'{n_max} ↑  {len(crit) - n_max} ↓', 'a maximizar e a minimizar'),
         ])
 
-    section('Matriz de desempenho', 'alternativas nas linhas, critérios nas colunas')
+    section('Matriz de desempenho', 'Alternativas nas linhas, critérios nas colunas.')
     alts = data['alternatives']
     new = rebuild_matrix(data, alts, [c['name'] for c in crit])
     new.index.name = 'Alternativa'
@@ -119,10 +119,10 @@ def render(e, data, owner, u):
                for c in crit}
         if owner: edited = st.data_editor(new, width='stretch', key='matrix_v3', column_config=cfg)
         else: st.dataframe(new, width='stretch', column_config=cfg)
-        st.caption('↑ maximizar: valores maiores são preferíveis · ↓ minimizar: valores menores são preferíveis.')
+        st.caption('↑ maximizar: valores maiores são preferíveis. ↓ minimizar: valores menores são preferíveis.')
 
     if not promethee:
-        section('Limiares', 'condições para aceitar a sobreclassificação aSb')
+        section('Limiares', 'Condições para aceitar a sobreclassificação aSb.')
         c1, c2 = st.columns(2, gap='medium')
         data['c'] = c1.slider('Concordância mínima c′', 0., 1., float(data.get('c', .7)), .01, disabled=not owner,
                               help='aSb exige C(a,b) ≥ c′.')

@@ -4,6 +4,14 @@ import html
 import numpy as np
 import streamlit as st
 
+from ui.theme import COLORS, rgb
+
+# ícone de cada área, o mesmo usado na navegação lateral
+PAGE_ICONS = {
+    'Problema': 'description', 'Dados': 'table_view', 'Método': 'function', 'Análise': 'analytics',
+    'Sensibilidade': 'tune', 'Sobre': 'info', 'Workspace': 'folder_open', 'Modelo incompleto': 'rule',
+}
+
 
 def esc(x):
     return html.escape(str(x))
@@ -22,29 +30,30 @@ def method_tone(method):
     return 'promethee' if method == 'PROMETHEE II' else 'electre'
 
 
-def page_header(kicker, title, lead=''):
-    num, _, name = kicker.partition(' / ')
-    eyebrow = f'<span class="num">{esc(num)}</span> · {esc(name)}' if name else esc(kicker)
+def page_header(where, title, lead=''):
+    """Título da página. `where` identifica a área ('03 / Método', 'Workspace') e escolhe o ícone."""
+    name = where.partition(' / ')[2] or where
+    mark = icon(PAGE_ICONS[name]) if name in PAGE_ICONS else ''
     st.html(
-        f'<div class="mcda-pagehead"><div class="mcda-eyebrow">{eyebrow}</div>'
-        f'<h1 class="mcda-title">{esc(title)}</h1>'
+        f'<div class="mcda-pagehead"><h1 class="mcda-title">{mark}<span>{esc(title)}</span></h1>'
         + (f'<div class="mcda-lead">{esc(lead)}</div>' if lead else '')
         + '</div>'
     )
 
 
 def section(label, hint='', step=None):
+    """Título de seção. `step` numera etapas quando o conteúdo é de fato uma sequência."""
     st.html(
-        '<div class="mcda-section">'
+        '<div class="mcda-section"><div class="mcda-section-head">'
         + (f'<span class="mcda-section-step">{esc(step)}</span>' if step else '')
-        + f'<span class="mcda-section-label">{esc(label)}</span>'
-        + (f'<span class="mcda-section-hint">{esc(hint)}</span>' if hint else '')
+        + f'<h2 class="mcda-section-label">{esc(label)}</h2></div>'
+        + (f'<div class="mcda-section-hint">{esc(hint)}</div>' if hint else '')
         + '</div>'
     )
 
 
 def panel(key, title='', hint=''):
-    """Superfície branca com borda para gráficos e grupos. Use com `with`."""
+    """Card padrão para gráficos e grupos. Use com `with`."""
     box = st.container(border=True, key=f'panel_{key}')
     if title:
         box.html(
@@ -55,19 +64,20 @@ def panel(key, title='', hint=''):
 
 
 def metric_strip(items):
-    """Faixa compacta de indicadores. Cada item: (rótulo, valor, nota[, opções]).
+    """Linha de cards de métrica. Cada item: (rótulo, valor, nota[, opções]).
 
-    opções: {'mono': bool, 'tone': 'success' | 'neutral', 'plain': bool}
-    `plain` desliga as maiúsculas do rótulo, para notação (φ, S(a,b)) e nomes.
+    opções: 'accent' destaca o card principal; 'tone' ('success' | 'neutral') transforma a
+    nota em selo; 'small' reduz o valor (textos longos); 'code' usa fonte de código.
     """
     cells = []
     for item in items:
         label, value, note = item[:3]
         opt = item[3] if len(item) > 3 else {}
+        size = ' code' if opt.get('code') else ' small' if opt.get('small') else ''
         cells.append(
-            f'<div class="mcda-metric {opt.get("tone", "")}">'
-            f'<div class="mcda-metric-label{" plain" if opt.get("plain") else ""}">{esc(label)}</div>'
-            f'<div class="mcda-metric-value{" mono" if opt.get("mono") else ""}">{esc(value)}</div>'
+            f'<div class="mcda-metric {opt.get("tone", "")}{" accent" if opt.get("accent") else ""}">'
+            f'<div class="mcda-metric-label">{esc(label)}</div>'
+            f'<div class="mcda-metric-value{size}">{esc(value)}</div>'
             + (f'<div class="mcda-metric-note">{esc(note)}</div>' if note else '')
             + '</div>'
         )
@@ -75,11 +85,12 @@ def metric_strip(items):
 
 
 def callout(text, title='', tone=''):
-    """`text` pode conter <strong>; escape os trechos vindos do usuário antes."""
+    """Bloco de leitura. `text` pode conter <strong>; escape os trechos vindos do usuário antes."""
+    mark = 'warning' if tone == 'warning' else 'lightbulb'
     st.html(
-        f'<div class="mcda-callout {tone}">'
+        f'<div class="mcda-callout {tone}">{icon(mark)}<div>'
         + (f'<div class="mcda-callout-title">{esc(title)}</div>' if title else '')
-        + f'{text}</div>'
+        + f'{text}</div></div>'
     )
 
 
@@ -92,7 +103,7 @@ def steps(labels):
     """Sequência numerada de etapas, usada no login e nas páginas de método."""
     parts = []
     for i, label in enumerate(labels, 1):
-        parts.append(f'<span class="mcda-step"><span class="mcda-step-n">{i:02d}</span>{esc(label)}</span>')
+        parts.append(f'<span class="mcda-step"><span class="mcda-step-n">{i}</span><span>{esc(label)}</span></span>')
     sep = '<span class="mcda-step-sep" aria-hidden="true"></span>'
     return f'<div class="mcda-steps">{sep.join(parts)}</div>'
 
@@ -138,6 +149,7 @@ def matrix_table(M, names, fmt='{:.4f}', heat=True, mark=None, corner='a \\ b', 
     M = np.asarray(M, dtype=float)
     off = M[~np.eye(len(M), dtype=bool)] if len(M) > 1 else M.ravel()
     lo, hi = (float(off.min()), float(off.max())) if off.size else (0.0, 0.0)
+    tint = rgb(COLORS['primary'])
     head = f'<th scope="col">{esc(corner)}</th>' + ''.join(f'<th class="r" scope="col">{esc(n)}</th>' for n in names)
     body = []
     for i, name in enumerate(names):
@@ -149,8 +161,8 @@ def matrix_table(M, names, fmt='{:.4f}', heat=True, mark=None, corner='a \\ b', 
             v = M[i, j]
             style = ''
             if heat and hi > lo:
-                alpha = 0.03 + 0.22 * (v - lo) / (hi - lo)
-                style = f' style="background:rgba(27,90,114,{alpha:.3f})"'
+                alpha = 0.03 + 0.25 * (v - lo) / (hi - lo)
+                style = f' style="background:rgba({tint},{alpha:.3f})"'
             cls = 'num hit' if mark is not None and mark[i][j] else 'num'
             tds.append(f'<td class="{cls}"{style}>{esc(fmt.format(v))}</td>')
         body.append(f'<tr><th scope="row">{esc(name)}</th>{"".join(tds)}</tr>')
@@ -166,7 +178,7 @@ def rank_list(rows):
     out = []
     for pos, name, value in rows:
         out.append(
-            f'<div class="mcda-rank{" first" if pos == 1 else ""}"><span class="mcda-rank-n">{pos:02d}</span>'
+            f'<div class="mcda-rank{" first" if pos == 1 else ""}"><span class="mcda-rank-n">{pos}</span>'
             f'<span class="mcda-rank-name">{esc(name)}</span><span class="mcda-rank-val">{esc(value)}</span></div>'
         )
     st.html(''.join(out))
@@ -174,10 +186,13 @@ def rank_list(rows):
 
 def footer():
     st.html(
-        '<div class="mcda-footer">'
-        '<span><strong>MCDA Lab</strong> · Laboratório didático de Apoio Multicritério à Decisão</span>'
-        '<span>UFMS · 2026 · Laert Costa · Felipe Pires · PROMETHEE II · ELECTRE I · Uso acadêmico</span>'
-        '<span class="mcda-footer-note">Ferramenta didática: os resultados dependem dos dados, pesos, parâmetros e limiares '
-        'definidos pelo usuário. O sistema apoia a análise e não substitui o julgamento do decisor.</span>'
-        '</div>'
+        '<footer class="mcda-footer"><div class="mcda-footer-grid">'
+        '<div><div class="mcda-footer-brand">MCDA Lab</div>'
+        '<div class="mcda-footer-desc">Laboratório didático de Apoio Multicritério à Decisão</div></div>'
+        '<div><div class="mcda-footer-head">Métodos</div><ul><li>PROMETHEE II</li><li>ELECTRE I</li></ul></div>'
+        '<div><div class="mcda-footer-head">Autoria</div><ul><li>Laert Costa</li><li>Felipe Pires</li><li>UFMS, 2026</li></ul></div>'
+        '</div><div class="mcda-footer-note">'
+        '<span>Ferramenta didática. Os resultados dependem dos dados, pesos, parâmetros e limiares definidos pelo usuário. '
+        'O sistema apoia a análise e não substitui o julgamento do decisor.</span>'
+        + badge('Uso acadêmico') + '</div></footer>'
     )
