@@ -16,8 +16,6 @@ setup_page()
 try: storage.init()
 except RuntimeError as err:
     st.error(str(err), icon=':material/error:'); st.stop()
-if st.query_params.get('diag') == '1':  # TEMPORARIO: nomes dos cookies e cabecalhos que chegam ao servidor
-    st.code(f'streamlit {st.__version__} | cookies: {sorted(st.context.cookies.keys())} | headers: {sorted(st.context.headers.keys())}')
 session.restore()
 
 CALC_PAGES = {

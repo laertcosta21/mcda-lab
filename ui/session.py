@@ -3,6 +3,10 @@
 O Streamlit apaga o session_state a cada recarga. Para manter o login, o token da
 sessão fica num cookie do navegador e é validado no banco a cada nova conexão.
 A tela em que a pessoa estava (exercício e seção) fica na URL.
+
+Quem lê o cookie é o navegador, por um componente que o devolve ao Python: o
+Streamlit Community Cloud não repassa cookies ao app, então st.context.cookies
+chega vazio em produção.
 """
 import streamlit as st
 
@@ -11,12 +15,21 @@ from engine import storage
 
 COOKIE = 'mcda_session'
 
+_reader = st.components.v2.component('mcda_session_reader', js="""
+export default function({ setStateValue }) {
+    const found = document.cookie.match(/(?:^|; )%s=([^;]*)/);
+    setStateValue('token', found ? found[1] : '');
+}
+""" % COOKIE)
+
 
 def restore():
     """Recupera o usuário pelo cookie e a tela pela URL, uma vez por conexão."""
     ss = st.session_state
-    if not ss.get('user') and not ss.get('_logged_out'):
-        token = _read_cookie()
+    if not ss.get('user') and not ss.get('_logged_out') and '_browser_token' not in ss:
+        token = _reader(key='mcda_session_reader', on_token_change=lambda: None).token
+        if token is None: st.stop()  # o navegador ainda não respondeu; a resposta dispara nova execução
+        ss['_browser_token'] = token
         u = storage.session_user(token)
         if u:
             ss.user = dict(u); ss['_token'] = token
