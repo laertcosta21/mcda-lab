@@ -25,24 +25,11 @@ def setting(key):
     return os.getenv(key) or dotenv_values().get(key) or None
 
 
-def seen():
-    """Diagnóstico do que há em st.secrets: só nomes e se há valor, nunca o valor."""
-    try:
-        import streamlit as st
-        def label(k, v):
-            name = k if str(k).replace('_', '').isalnum() and len(str(k)) <= 30 else '(nome fora do padrão)'
-            return f'[{name}] (seção)' if hasattr(v, 'keys') else f'{name} ({"com valor" if str(v).strip() else "vazio"})'
-        found = [label(k, st.secrets[k]) for k in st.secrets]
-        return 'Secrets lidos: ' + (', '.join(found) if found else 'nenhum') + '.'
-    except Exception as e:
-        return f'Secrets ilegíveis ({type(e).__name__}).'
-
-
 @lru_cache(maxsize=1)
 def client():
     url, key = setting('SUPABASE_URL'), setting('SUPABASE_KEY')
     if not url or not key:
-        raise RuntimeError('Defina SUPABASE_URL e SUPABASE_KEY no .env (local) ou nos secrets do Streamlit Cloud. ' + seen())
+        raise RuntimeError('Defina SUPABASE_URL e SUPABASE_KEY no .env (local) ou nos secrets do Streamlit Cloud.')
     return create_client(url, key)
 
 
