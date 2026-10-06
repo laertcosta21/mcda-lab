@@ -9,6 +9,13 @@ pip install -r requirements.txt
 python -m streamlit run app.py
 ```
 
+Antes de executar, rode `supabase_schema.sql` no SQL Editor do Supabase e informe as credenciais:
+
+- local: `SUPABASE_URL` e `SUPABASE_KEY` no arquivo `.env`;
+- Streamlit Cloud: as mesmas chaves em *Settings → Secrets*.
+
+O app usa `st.secrets` quando as chaves estão lá e, na falta, as variáveis de ambiente. A chave é a secreta (`service_role` / `sb_secret_…`): as tabelas têm RLS ligado sem policies.
+
 ## Testes
 
 ```bash
@@ -17,7 +24,7 @@ python -m pytest -q
 
 - `tests/test_engines.py`: casos dourados dos motores. Não ajustar os valores esperados.
 - `tests/test_core.py`: garante que a camada de explicação reproduz os totais dos motores.
-- `tests/test_storage.py`: sessão persistente e operações de edição e remoção, em banco temporário.
+- `tests/test_storage.py`: sessão persistente e operações de edição e remoção, contra um Supabase falso em memória (`tests/fake_supabase.py`).
 
 ## Estrutura
 
@@ -25,7 +32,7 @@ python -m pytest -q
 | --- | --- | --- |
 | Roteamento | `app.py` | Decide qual tela mostrar. |
 | Matemática | `engine/promethee.py`, `engine/electre.py` | Motores validados. Não alterar sem revalidação. |
-| Persistência | `engine/storage.py` | SQLite (`mcda_lab.db`, fora do versionamento). |
+| Persistência | `engine/storage.py` | Supabase (PostgreSQL) via `supabase-py`. Esquema em `supabase_schema.sql`. |
 | Regras | `core/rules.py` | Estrutura do exercício, validação do modelo, parâmetros por função de preferência. |
 | Explicação | `core/explain.py` | Decomposições e leituras derivadas dos resultados dos motores. |
 | Design system | `ui/theme.py` | Tokens (cores, tipografia, espaçamento, raios, sombras, larguras, alturas, ícones) e todo o CSS. |

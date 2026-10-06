@@ -3,6 +3,8 @@ __pycache__/
 .pytest_cache/
 .venv/
 venv/
-# banco local: contém contas e hashes de senha, não versionar
-mcda_lab.db
+# credenciais do Supabase: nunca versionar
+.env
 .streamlit/secrets.toml
+# banco local antigo (SQLite): contém contas e hashes de senha, não versionar
+*.db

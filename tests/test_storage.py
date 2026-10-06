@@ -1,14 +1,17 @@
-"""Sessão persistente e operações de edição e remoção, sempre contra um banco temporário."""
+"""Sessão persistente e operações de edição e remoção, sempre contra um Supabase falso em memória."""
 import pytest
+import streamlit as st
 
 from engine import storage
+from fake_supabase import FakeSupabase
 
 DATA = {'alternatives': [], 'criteria': [], 'matrix': [], 'c': .7, 'd': .4}
 
 
 @pytest.fixture
-def db(tmp_path, monkeypatch):
-    monkeypatch.setattr(storage, 'DB', tmp_path / 'test.db')
+def db(monkeypatch):
+    fake = FakeSupabase()
+    monkeypatch.setattr(storage, 'client', lambda: fake)
     storage.init()
     storage.register('Ana', 'ana@x.test', 'senha-a'); storage.register('Bia', 'bia@x.test', 'senha-b')
     return storage.login('ana@x.test', 'senha-a')['id'], storage.login('bia@x.test', 'senha-b')['id']
@@ -58,3 +61,35 @@ def test_profile_password_and_account_removal(db):
     storage.user_delete(ana)
     assert storage.login('ana@x.test', 'nova') is None and storage.session_user(token) is None
     assert storage.list_for(bia) == []
+
+
+def test_duplicate_email_and_duplicate_join_are_harmless(db):
+    ana, bia = db
+    assert storage.register('Outra Ana', 'ANA@x.test', 'x') == (False, 'E-mail já cadastrado.')
+    eid = storage.create(ana, 'Ex', '', 'ELECTRE I', DATA)
+    code = storage.get(eid, ana)['code']
+    assert storage.join(bia, code) is True and storage.join(bia, code) is True
+    assert storage.join(bia, 'MCDA-XXXXX') is False
+    assert [e['id'] for e in storage.list_for(bia)] == [eid] and storage.get(eid, bia)['id'] == eid
+    assert storage.update(eid, bia, DATA) is False and storage.update(eid, ana, DATA, 'Novo') is True
+    assert storage.get(eid, ana)['name'] == 'Novo'
+
+
+def test_expired_session_is_rejected(db, monkeypatch):
+    ana, _ = db
+    token = storage.session_create(ana)
+    monkeypatch.setattr(storage, 'SESSION_DAYS', -1)
+    assert storage.session_user(token) is None
+
+
+def test_credentials_come_from_secrets_then_environment(monkeypatch):
+    monkeypatch.setenv('SUPABASE_URL', 'https://env.test')
+    monkeypatch.setattr(st, 'secrets', {'SUPABASE_URL': 'https://secrets.test'})
+    assert storage.setting('SUPABASE_URL') == 'https://secrets.test'
+    monkeypatch.setattr(st, 'secrets', {'SUPABASE_URL': ''})
+    assert storage.setting('SUPABASE_URL') == 'https://env.test'
+    monkeypatch.setenv('SUPABASE_URL', '')  # é o que um secrets.toml em branco deixa no ambiente
+    monkeypatch.setattr(storage, 'dotenv_values', lambda: {'SUPABASE_URL': 'https://dotenv.test'})
+    assert storage.setting('SUPABASE_URL') == 'https://dotenv.test'
+    monkeypatch.setattr(storage, 'dotenv_values', lambda: {'SUPABASE_URL': ''})
+    assert storage.setting('SUPABASE_URL') is None

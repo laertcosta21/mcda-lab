@@ -12,8 +12,10 @@ from ui.navigation import sidebar_lab
 from ui.views import about, analysis, auth, dashboard, method, problem, sensitivity
 from ui.views import data as data_view
 
-storage.init()
 setup_page()
+try: storage.init()
+except RuntimeError as err:
+    st.error(str(err), icon=':material/error:'); st.stop()
 session.restore()
 
 CALC_PAGES = {
