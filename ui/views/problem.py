@@ -54,7 +54,9 @@ def render(e, data, owner, u):
                                 placeholder='Descreva o objetivo da decisão e seu contexto.')
     with right:
         with panel('alts', 'Alternativas', 'Inclua na última linha. Para excluir, selecione a linha e use a lixeira.'):
-            adf = st.data_editor(pd.DataFrame({'Alternativa': data['alternatives']}), num_rows='dynamic', width='stretch', hide_index=True,
+            # Força texto: listas vazias, None ou nomes numéricos geram coluna float, incompatível com TextColumn.
+            alt_names = ['' if a is None or (isinstance(a, float) and pd.isna(a)) else str(a) for a in data['alternatives']]
+            adf = st.data_editor(pd.DataFrame({'Alternativa': pd.Series(alt_names, dtype='object')}), num_rows='dynamic', width='stretch', hide_index=True,
                                  key='alts_v3', column_config={'Alternativa': st.column_config.TextColumn('Alternativa', required=True)})
     alts = [str(x).strip() for x in adf['Alternativa'].tolist() if str(x).strip() and str(x) != 'nan']
 
