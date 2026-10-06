@@ -1,8 +1,9 @@
 """Persistência no Supabase (PostgreSQL). O esquema fica em supabase_schema.sql."""
-import json, hashlib, os, secrets, string
+import base64, hmac, json, hashlib, os, secrets, string
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 
+import bcrypt
 from dotenv import dotenv_values, load_dotenv
 from postgrest.exceptions import APIError
 from supabase import create_client
@@ -10,6 +11,7 @@ from supabase import create_client
 load_dotenv()
 
 SESSION_DAYS = 30
+BCRYPT_ROUNDS = 12
 UNIQUE_VIOLATION = '23505'
 
 
@@ -45,14 +47,31 @@ def init():
     client()
 
 
-def h(p): return hashlib.sha256(p.encode()).hexdigest()
+def h(p): return hashlib.sha256(p.encode()).hexdigest()  # só para tokens de sessão, que já são aleatórios
+
+
+def _pw(p): return base64.b64encode(hashlib.sha256(p.encode()).digest())  # o bcrypt só lê 72 bytes
+def hash_password(p): return bcrypt.hashpw(_pw(p), bcrypt.gensalt(BCRYPT_ROUNDS)).decode()
+def check_password(p, stored):
+    """Confere a senha. Devolve (confere, precisa_regravar); hashes SHA-256 antigos ainda são aceitos."""
+    if not stored: return False, False
+    if stored.startswith('$2'): return bcrypt.checkpw(_pw(p), stored.encode()), False
+    ok = hmac.compare_digest(h(p), stored); return ok, ok
+
+
 def register(name,email,password):
- try: t('users').insert({'name':name,'email':email.lower(),'password':h(password)}).execute()
+ try: t('users').insert({'name':name,'email':email.lower(),'password':hash_password(password)}).execute()
  except APIError as e:
   if e.code!=UNIQUE_VIOLATION: raise
   return False,'E-mail já cadastrado.'
  return True,None
-def login(email,password): return one(t('users').select('*').eq('email',email.lower()).eq('password',h(password)))
+def login(email,password):
+ u=one(t('users').select('*').eq('email',email.lower()))
+ ok,old=check_password(password,u['password']) if u else (False,False)
+ if not ok:return None
+ if old:
+  u['password']=hash_password(password); t('users').update({'password':u['password']}).eq('id',u['id']).execute()
+ return u
 def code(): return 'MCDA-'+''.join(secrets.choice(string.ascii_uppercase+string.digits) for _ in range(5))
 def create(uid,name,desc,method,data):
  return rows(t('exercises').insert({'owner_id':uid,'name':name,'description':desc,'method':method,'code':code(),'data':json.dumps(data)}))[0]['id']
@@ -105,8 +124,9 @@ def user_update(uid, name):
 
 def user_set_password(uid, current, new):
     """Troca a senha se a atual conferir."""
-    if not one(t('users').select('id').eq('id', uid).eq('password', h(current))): return False
-    t('users').update({'password': h(new)}).eq('id', uid).execute()
+    u = one(t('users').select('password').eq('id', uid))
+    if not u or not check_password(current, u['password'])[0]: return False
+    t('users').update({'password': hash_password(new)}).eq('id', uid).execute()
     return True
 
 

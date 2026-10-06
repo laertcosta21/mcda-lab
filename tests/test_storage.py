@@ -12,6 +12,7 @@ DATA = {'alternatives': [], 'criteria': [], 'matrix': [], 'c': .7, 'd': .4}
 def db(monkeypatch):
     fake = FakeSupabase()
     monkeypatch.setattr(storage, 'client', lambda: fake)
+    monkeypatch.setattr(storage, 'BCRYPT_ROUNDS', 4)  # custo mínimo: os testes não medem a força do hash
     storage.init()
     storage.register('Ana', 'ana@x.test', 'senha-a'); storage.register('Bia', 'bia@x.test', 'senha-b')
     return storage.login('ana@x.test', 'senha-a')['id'], storage.login('bia@x.test', 'senha-b')['id']
@@ -93,3 +94,17 @@ def test_credentials_come_from_secrets_then_environment(monkeypatch):
     assert storage.setting('SUPABASE_URL') == 'https://dotenv.test'
     monkeypatch.setattr(storage, 'dotenv_values', lambda: {'SUPABASE_URL': ''})
     assert storage.setting('SUPABASE_URL') is None
+
+
+def test_passwords_are_stored_with_bcrypt_and_old_hashes_are_upgraded(db):
+    ana, _ = db
+    stored = lambda: storage.t('users').select('password').eq('id', ana).execute().data[0]['password']
+    assert stored().startswith('$2') and 'senha-a' not in stored()
+    assert storage.hash_password('senha-a') != storage.hash_password('senha-a')  # salt por senha
+    longa = 'x' * 100
+    assert storage.user_set_password(ana, 'senha-a', longa) is True
+    assert storage.login('ana@x.test', longa) is not None and storage.login('ana@x.test', longa + 'y') is None
+    storage.t('users').update({'password': storage.h('antiga')}).eq('id', ana).execute()  # conta da era SHA-256
+    assert storage.login('ana@x.test', 'errada') is None and not stored().startswith('$2')
+    assert storage.login('ana@x.test', 'antiga')['id'] == ana and stored().startswith('$2')
+    assert storage.login('ana@x.test', 'antiga')['id'] == ana
